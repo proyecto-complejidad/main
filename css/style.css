@@ -1,0 +1,64 @@
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #FFF8F0;
+    margin: 0;
+    padding: 0;
+}
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    border-bottom: 2px solid #800080;
+}
+.header .logo {
+    display: flex;
+    align-items: center;
+}
+.header .logo i {
+    font-size: 24px;
+    color: #800080;
+    margin-right: 10px;
+}
+.header .logo span {
+    font-size: 24px;
+    color: #800080;
+    font-weight: bold;
+}
+.header .nav {
+    display: flex;
+    gap: 20px;
+}
+.header .nav a {
+    text-decoration: none;
+    color: #800080;
+    font-size: 16px;
+}
+.main {
+    text-align: center;
+    padding: 40px;
+}
+.main h1 {
+    font-size: 72px;
+    color: #800080;
+    margin: 0;
+}
+.main .description {
+    font-size: 16px;
+    color: #800080;
+    margin: 20px 0;
+}
+.main .image {
+    margin: 20px 0;
+}
+.main .image img {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+}
+.main .about {
+    font-size: 48px;
+    color: #800080;
+    margin: 40px 0;
+}
