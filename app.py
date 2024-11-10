@@ -1,59 +1,75 @@
 import customtkinter as ctk
 from tkintermapview import TkinterMapView
-import requests
+import csv
+from dijkstra import dijkstra, construir_grafo
+from kruskal import kruskal_mst  # Importa la función de Kruskal
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-def get_coordinates(place_name):
-    url = "https://nominatim.openstreetmap.org/search"
-    params = {
-        "q": place_name,
-        "format": "json",
-        "limit": 1
-    }
+import csv
 
-    response = requests.get(url, params=params, headers={"User -Agent": "YourAppName"})
+def cargar_centros_salud():
+    centros_salud = []
+    with open("centros_salud.csv", newline="", encoding="utf-8") as csvfile:
+        reader = csv.DictReader(csvfile, delimiter='|')
+        print("Encabezados encontrados:", reader.fieldnames)
+        for row in reader:
+            try:
+                # Reemplaza comas por puntos y elimina puntos adicionales
+                lat_str = row["x_gis"].replace(',', '.').replace('.', '', row["x_gis"].count('.') - 1)
+                lon_str = row["y_gis"].replace(',', '.').replace('.', '', row["y_gis"].count('.') - 1)
+                
+                lat = float(lat_str)
+                lon = float(lon_str)
 
-    if response.status_code == 200 and response.json():
-        data = response.json()[0]
-        lat, lon = float(data["lat"]), float(data["lon"])
-        return lat, lon
-    else:
-        return None
+                if -90 <= lat <= 90 and -180 <= lon <= 180:  # Verifica que las coordenadas sean válidas
+                    centros_salud.append({
+                        "nombre": row["Nombre"].strip(),
+                        "lat": lat,
+                        "lon": lon
+                    })
+                else:
+                    print(f"Coordenadas inválidas para {row['Nombre']}: lat={lat}, lon={lon}")
+            except ValueError as e:
+                print(f"Error en las coordenadas para {row['Nombre']}: {e}")
+    return centros_salud
 
-def search_location():
-    place_name = entry.get()
-    coordinates = get_coordinates(place_name)
-    if coordinates:
-        map_widget.set_position(coordinates[0], coordinates[1])
-        map_widget.set_zoom(10)
-        label.configure(text=f"Found location: {place_name}")
-    else:
-        label.configure(text="Location not found. Try another place.")
+def buscar_ruta_mas_corta():
+    inicio = entry_start.get()
+    fin = entry_end.get()
+    ruta, distancia = dijkstra(grafo, inicio, fin)
+    distancia = distancia*100
+    label_result.configure(text=f"Ruta más corta: {' -> '.join(ruta)}\nDistancia total: {distancia:.2f} kilómetros")
 
-def on_map_right_click(event):
-    lat, lon = map_widget.get_position()
-    map_widget.delete_all_marker()
-    marker = map_widget.set_marker(lat, lon, text="Selected Location")
-
-    label.configure(text=f"Coordinates: {lat}, {lon}")
+def mostrar_mst():
+    kruskal_mst(centros_salud, map_widget)
+    label_result.configure(text="Árbol de expansión mínima generado y mostrado en el mapa")
 
 root = ctk.CTk()
 root.geometry("800x600")
-root.title("Map with CustomTkinter and OpenStreetMap")
+root.title("Mapa con CustomTkinter y Dijkstra")
+
+centros_salud = cargar_centros_salud()
+grafo = construir_grafo(centros_salud)
 
 top_frame = ctk.CTkFrame(root)
 top_frame.pack(pady=10, fill="x")
 
-entry = ctk.CTkEntry(top_frame, placeholder_text="Enter a location (e.g., Lima, Peru)")
-entry.pack(side="left", padx=10, pady=5, fill="x", expand=True)
+entry_start = ctk.CTkEntry(top_frame, placeholder_text="Centro de salud inicial")
+entry_start.pack(side="left", padx=10, pady=5)
 
-search_button = ctk.CTkButton(top_frame, text="Search", command=search_location)
+entry_end = ctk.CTkEntry(top_frame, placeholder_text="Centro de salud destino")
+entry_end.pack(side="left", padx=10, pady=5)
+
+search_button = ctk.CTkButton(top_frame, text="Buscar Ruta", command=buscar_ruta_mas_corta)
 search_button.pack(side="left", padx=10, pady=5)
 
-label = ctk.CTkLabel(root, text="")
-label.pack(pady=5)
+label_result = ctk.CTkLabel(root, text="")
+label_result.pack(pady=5)
+
+mst_button = ctk.CTkButton(top_frame, text="Mostrar MST", command=mostrar_mst)
+mst_button.pack(side="left", padx=10, pady=5)
 
 map_frame = ctk.CTkFrame(root)
 map_frame.pack(pady=10, fill="both", expand=True)
@@ -62,7 +78,5 @@ map_widget = TkinterMapView(map_frame, width=760, height=500, corner_radius=10)
 map_widget.set_position(-12.0464, -77.0428)
 map_widget.set_zoom(10)
 map_widget.pack(fill="both", expand=True)
-
-map_widget.bind_all("<Button-3>", on_map_right_click)
 
 root.mainloop()
