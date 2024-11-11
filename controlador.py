@@ -19,7 +19,7 @@ class Controlador:
         
         self.configurar_interfaz()
 
-    def configurar_interfaz(self):
+    def configurar_interfaz(self): #visual
         top_frame = ctk.CTkFrame(self.root)
         top_frame.pack(pady=10, fill="x")
 
@@ -32,11 +32,20 @@ class Controlador:
         search_button = ctk.CTkButton(top_frame, text="Buscar Ruta", command=self.aplicar_dijkstra)
         search_button.pack(side="left", padx=10, pady=5)
 
+        mst_button = ctk.CTkButton(top_frame, text="Mostrar MST", command=self.aplicar_kruskal)
+        mst_button.pack(side="left", padx=10, pady=5)
+
         self.label_result = ctk.CTkLabel(self.root, text="")
         self.label_result.pack(pady=5)
 
-        mst_button = ctk.CTkButton(top_frame, text="Mostrar MST", command=self.aplicar_kruskal)
-        mst_button.pack(side="left", padx=10, pady=5)
+        bottom_frame = ctk.CTkFrame(self.root)
+        bottom_frame.pack(pady=10, fill="x")
+
+        self.buscar_centrito = ctk.CTkEntry(bottom_frame, placeholder_text="Centro de salud para buscar")
+        self.buscar_centrito.pack(side="left", padx=10, pady=10)
+
+        search_centro_salud = ctk.CTkButton(bottom_frame, text="Buscar Centro", command=self.buscar_centro_salud)
+        search_centro_salud.pack(side="left", padx=10, pady=5)
 
         map_frame = ctk.CTkFrame(self.root)
         map_frame.pack(pady=10, fill="both", expand=True)
@@ -45,7 +54,8 @@ class Controlador:
         self.map_widget.set_zoom(10)
         self.map_widget.pack(fill="both", expand=True)
 
-    def aplicar_dijkstra(self):
+
+    def aplicar_dijkstra(self): #aplicar el algoritmo de dijkstra
         inicio = self.entry_start.get()
         fin = self.entry_end.get()
 
@@ -56,7 +66,7 @@ class Controlador:
             text=f"Ruta más corta: {' -> '.join(ruta)}\nDistancia total: {distancia:.2f} kilómetros"
         )
 
-    def aplicar_kruskal(self):
+    def aplicar_kruskal(self): #aplicar el algoritmo de kruskal
         subset_centros = random.sample(self.centros_salud, 500) if len(self.centros_salud) > 500 else self.centros_salud
         kruskal_mst(subset_centros, self.map_widget)
 
@@ -64,7 +74,7 @@ class Controlador:
             text="Árbol de expansión mínima generado y mostrado en el mapa."
         )
 
-    def cargar_centros_salud(self):
+    def cargar_centros_salud(self): #leer el .csv
         centros_salud = []
         with open("centros_salud.csv", newline="", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile, delimiter='|')
@@ -79,7 +89,11 @@ class Controlador:
 
                     if -90 <= lat <= 90 and -180 <= lon <= 180:
                         centros_salud.append({
+                            "departamento": row["Departamento"].strip(),
+                            "provincia": row["Provincia"].strip(),
+                            "distrito": row["Distrito"].strip(),
                             "nombre": row["Nombre"].strip(),
+                            "telefono": row["Telefono"].strip(),
                             "lat": lat,
                             "lon": lon
                         })
@@ -88,3 +102,16 @@ class Controlador:
                 except ValueError as e:
                     print(f"Error en las coordenadas para {row['Nombre']}: {e}")
         return centros_salud
+    
+    def buscar_centro_salud(self): #implementacion para buscar los centros de salud
+        buscador = self.cargar_centros_salud()
+        centro_a_buscar = self.buscar_centrito.get()
+        for c in buscador:
+            if c["nombre"].lower() == centro_a_buscar.lower():
+                print(f"El centro de salud {centro_a_buscar} existe.")
+                print(f"Los datos del centro son: {c}")
+                return
+            
+        print(f"El centro de salud {centro_a_buscar} no existe.")
+            
+        
