@@ -54,17 +54,22 @@ class Controlador:
         self.map_widget.set_zoom(10)
         self.map_widget.pack(fill="both", expand=True)
 
-
-    def aplicar_dijkstra(self): #aplicar el algoritmo de dijkstra
-        inicio = self.entry_start.get()
+    def aplicar_dijkstra(self):  # aplicar el algoritmo de dijkstra con nodo de inicio obligatorio
+        inicio = self.entry_extra.get()
         fin = self.entry_end.get()
+
+        if not inicio:
+            self.label_result.configure(text="¡El nodo de inicio es obligatorio!")
+            return
+
+        if not fin:
+            self.label_result.configure(text="¡El nodo de destino debe ser ingresado!")
+            return
 
         ruta, distancia = dijkstra(self.grafo, inicio, fin)
         distancia *= 10
 
-        self.label_result.configure(
-            text=f"Ruta más corta: {' -> '.join(ruta)}\nDistancia total: {distancia:.2f} kilómetros"
-        )
+        self.label_result.configure(text=f"Ruta: {ruta}\nDistancia: {distancia:.2f} unidades")
 
     def aplicar_kruskal(self): #aplicar el algoritmo de kruskal
         subset_centros = random.sample(self.centros_salud, 500) if len(self.centros_salud) > 500 else self.centros_salud
@@ -110,7 +115,7 @@ class Controlador:
             if c["nombre"].lower() == centro_a_buscar.lower():
                 print(f"El centro de salud {centro_a_buscar} existe.")
                 print(f"Los datos del centro son: {c}")
-                return
+                return c
             
         print(f"El centro de salud {centro_a_buscar} no existe.")
             
