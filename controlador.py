@@ -44,7 +44,10 @@ class Controlador:
                 return centro
         return None
 
-    def aplicar_dijkstra(self, inicio, final):  # aplicar el algoritmo de dijkstra con nodo de inicio obligatorio
+    def aplicar_dijkstra(self, nombre_inicio, lat_inicio, lon_inicio, nombre_final): 
+        inicio = self.obtener_nodo_inicio(nombre_inicio, lat_inicio, lon_inicio)
+        final = self.obtener_nodo_final(nombre_final)
+
         if not inicio:
             print("¡El nodo de inicio es obligatorio!")
             return
@@ -53,13 +56,40 @@ class Controlador:
             print("¡El nodo de destino debe ser ingresado!")
             return
 
-        # Usamos el grafo construido en el backend
+        if inicio["nombre"] not in self.grafo:
+            self.grafo[inicio["nombre"]] = []
+
+            for centro in self.centros_salud:
+                distancia = self.calcular_distancia(inicio["lat"], inicio["lon"], centro['lat'], centro['lon'])
+                self.grafo[inicio["nombre"]].append((distancia, centro["nombre"]))
+
         ruta, distancia = dijkstra(self.grafo, inicio["nombre"], final["nombre"])
         distancia *= 10
 
         return ruta, distancia
 
-    def aplicar_kruskal(self, inicio, final):
+    def aplicar_kruskal(self, nombre_inicio, lat_inicio, lon_inicio, nombre_final):
+        inicio = self.obtener_nodo_inicio(nombre_inicio, lat_inicio, lon_inicio)
+        final = self.obtener_nodo_final(nombre_final)
+
+        if not inicio:
+            print("¡El nodo de inicio es obligatorio!")
+            return
+
+        if not final:
+            print("¡El nodo de destino debe ser ingresado!")
+            return
+
+        if inicio["nombre"] not in self.grafo:
+            self.grafo[inicio["nombre"]] = []
+
+            for centro in self.centros_salud:
+                distancia = self.calcular_distancia(inicio["lat"], inicio["lon"], centro['lat'], centro['lon'])
+                self.grafo[inicio["nombre"]].append((distancia, centro["nombre"]))
+
+        if final["nombre"] not in self.grafo:
+            self.grafo[final["nombre"]] = []
+
         subset_centros = random.sample(self.centros_salud, 500) if len(self.centros_salud) > 500 else self.centros_salud
         subset_centros.append({'name': 'inicio', 'lat': inicio["lat"], 'lon': inicio["lon"]})
         mst_edges, total_distancia = kruskal_mst(subset_centros)
@@ -70,6 +100,7 @@ class Controlador:
 
         print(f"Total de distancia: {total_distancia}")
         return mst_edges, total_distancia
+
 
     def cargar_centros_salud(self):  # leer el .csv
         centros_salud = []
