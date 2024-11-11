@@ -1,79 +1,68 @@
 from Librerias import *
-from dijkstra import dijkstra, construir_grafo
+from dijkstra import dijkstra
 from kruskal import kruskal_mst
-import customtkinter as ctk
 from tkintermapview import TkinterMapView
 
 class Controlador:
     def __init__(self, root):
-        ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("blue")
-        
         self.centros_salud = self.cargar_centros_salud()
         self.root = root
         self.root.geometry("800x600")
         self.root.title("Mapa con CustomTkinter y Dijkstra")
-        
-        self.map_widget = TkinterMapView(root, width=760, height=500, corner_radius=10)
-        self.grafo = construir_grafo(self.centros_salud)
+        self.grafo = self.construir_grafo(self.centros_salud)
         
         self.configurar_interfaz()
 
-    def configurar_interfaz(self): #visual
-        top_frame = ctk.CTkFrame(self.root)
-        top_frame.pack(pady=10, fill="x")
+    def calcular_distancia(self, lat1, lon1, lat2, lon2):
+        return math.sqrt((lat2 - lat1) ** 2 + (lon2 - lon1) ** 2)
+    
+    def construir_grafo(self, centros_salud):
+        grafo = {}
+        for centro_a in centros_salud:
+            for centro_b in centros_salud:
+                if centro_a != centro_b:
+                    dist = self.calcular_distancia(
+                        centro_a['lat'], centro_a['lon'],
+                        centro_b['lat'], centro_b['lon']
+                    )
+                    if centro_a['nombre'] not in grafo:
+                        grafo[centro_a['nombre']] = []
+                    grafo[centro_a['nombre']].append((dist, centro_b['nombre']))
+        return grafo
+    
+    def obtener_nodo_inicio(self, nombre, lat, lon):
+        nodo_inicio = {
+            "name": nombre,
+            "lat": lat,
+            "lon": lon
+        }
+        return nodo_inicio
+    
+    def obtener_nodo_final(self, nombre_final):
+        for centro in self.centros_salud:
+            if centro["nombre"].lower() == nombre_final.lower():
+                return centro
+        return None
 
-        self.entry_start = ctk.CTkEntry(top_frame, placeholder_text="Centro de salud inicial")
-        self.entry_start.pack(side="left", padx=10, pady=5)
-
-        self.entry_end = ctk.CTkEntry(top_frame, placeholder_text="Centro de salud destino")
-        self.entry_end.pack(side="left", padx=10, pady=5)
-
-        search_button = ctk.CTkButton(top_frame, text="Buscar Ruta", command=self.aplicar_dijkstra)
-        search_button.pack(side="left", padx=10, pady=5)
-
-        mst_button = ctk.CTkButton(top_frame, text="Mostrar MST", command=self.aplicar_kruskal)
-        mst_button.pack(side="left", padx=10, pady=5)
-
-        self.label_result = ctk.CTkLabel(self.root, text="")
-        self.label_result.pack(pady=5)
-
-        bottom_frame = ctk.CTkFrame(self.root)
-        bottom_frame.pack(pady=10, fill="x")
-
-        self.buscar_centrito = ctk.CTkEntry(bottom_frame, placeholder_text="Centro de salud para buscar")
-        self.buscar_centrito.pack(side="left", padx=10, pady=10)
-
-        search_centro_salud = ctk.CTkButton(bottom_frame, text="Buscar Centro", command=self.buscar_centro_salud)
-        search_centro_salud.pack(side="left", padx=10, pady=5)
-
-        map_frame = ctk.CTkFrame(self.root)
-        map_frame.pack(pady=10, fill="both", expand=True)
-
-        self.map_widget.set_position(-12.0464, -77.0428)
-        self.map_widget.set_zoom(10)
-        self.map_widget.pack(fill="both", expand=True)
-
-    def aplicar_dijkstra(self):  # aplicar el algoritmo de dijkstra con nodo de inicio obligatorio
-        inicio = self.entry_extra.get()
-        fin = self.entry_end.get()
-
+    def aplicar_dijkstra(self, inicio, final):  # aplicar el algoritmo de dijkstra con nodo de inicio obligatorio
         if not inicio:
-            self.label_result.configure(text="¡El nodo de inicio es obligatorio!")
+            print("¡El nodo de inicio es obligatorio!")
             return
 
-        if not fin:
-            self.label_result.configure(text="¡El nodo de destino debe ser ingresado!")
+        if not final:
+            print("¡El nodo de destino debe ser ingresado!")
             return
 
-        ruta, distancia = dijkstra(self.grafo, inicio, fin)
+        # Usamos el grafo construido en el backend
+        ruta, distancia = dijkstra(self.grafo, inicio["nombre"], final["nombre"])
         distancia *= 10
 
         return ruta, distancia
 
-    def aplicar_kruskal(self): #aplicar el algoritmo de kruskal
+    def aplicar_kruskal(self, inicio, final):
         subset_centros = random.sample(self.centros_salud, 500) if len(self.centros_salud) > 500 else self.centros_salud
-        mst_edges, total_distancia = kruskal_mst(subset_centros, self.map_widget)
+        subset_centros.append({'name': 'inicio', 'lat': inicio["lat"], 'lon': inicio["lon"]})
+        mst_edges, total_distancia = kruskal_mst(subset_centros)
         
         print("Aristas del MST (Conexiones):")
         for u, v, dist in mst_edges:
@@ -82,7 +71,7 @@ class Controlador:
         print(f"Total de distancia: {total_distancia}")
         return mst_edges, total_distancia
 
-    def cargar_centros_salud(self): #leer el .csv
+    def cargar_centros_salud(self):  # leer el .csv
         centros_salud = []
         with open("centros_salud.csv", newline="", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile, delimiter='|')
@@ -111,7 +100,7 @@ class Controlador:
                     print(f"Error en las coordenadas para {row['Nombre']}: {e}")
         return centros_salud
     
-    def buscar_centro_salud(self): #implementacion para buscar los centros de salud
+    def buscar_centro_salud(self):  # implementación para buscar los centros de salud
         buscador = self.cargar_centros_salud()
         centro_a_buscar = self.buscar_centrito.get()
         for c in buscador:
@@ -121,5 +110,3 @@ class Controlador:
                 return c
             
         print(f"El centro de salud {centro_a_buscar} no existe.")
-            
-        

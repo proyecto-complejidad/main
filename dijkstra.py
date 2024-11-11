@@ -1,28 +1,14 @@
 # dijkstra.py
 from Librerias import *
 
-def calcular_distancia(lat1, lon1, lat2, lon2):
-    return math.sqrt((lat2 - lat1) ** 2 + (lon2 - lon1) ** 2)
-
-def construir_grafo(centros_salud):
-    grafo = {}
-    for centro_a in centros_salud:
-        for centro_b in centros_salud:
-            if centro_a != centro_b:
-                dist = calcular_distancia(
-                    centro_a['lat'], centro_a['lon'],
-                    centro_b['lat'], centro_b['lon']
-                )
-                if centro_a['nombre'] not in grafo:
-                    grafo[centro_a['nombre']] = []
-                grafo[centro_a['nombre']].append((dist, centro_b['nombre']))
-    return grafo
-
 def dijkstra(grafo, inicio, fin):
     distancias = {nodo: float('inf') for nodo in grafo}
     distancias[inicio] = 0
     heap = [(0, inicio)]
     caminos = {inicio: None}
+
+    from controlador import Controlador
+    controlador = Controlador(None)
 
     while heap:
         distancia_actual, nodo_actual = heapq.heappop(heap)

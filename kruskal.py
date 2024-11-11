@@ -1,7 +1,5 @@
+# kruskal.py
 from Librerias import *
-
-def calcular_distancia(lat1, lon1, lat2, lon2):
-    return math.sqrt((lat2 - lat1) ** 2 + (lon2 - lon1) ** 2)
 
 class UnionFind:
     def __init__(self, n):
@@ -29,9 +27,12 @@ def kruskal_mst(centros_salud, map_widget=None):
     edges = []
     n = len(centros_salud)
     
+    from controlador import Controlador
+    controlador = Controlador(None)
+    
     for i in range(n):
         for j in range(i + 1, n):
-            dist = calcular_distancia(
+            dist = controlador.calcular_distancia(
                 centros_salud[i]['lat'], centros_salud[i]['lon'],
                 centros_salud[j]['lat'], centros_salud[j]['lon']
             )
@@ -59,4 +60,3 @@ def kruskal_mst(centros_salud, map_widget=None):
             map_widget.set_path([(lat1, lon1), (lat2, lon2)])
     
     return mst_edges, total_distancia
-
