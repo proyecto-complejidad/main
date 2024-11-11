@@ -29,7 +29,6 @@ def kruskal_mst(centros_salud, map_widget=None):
     edges = []
     n = len(centros_salud)
     
-    # Crear todas las aristas con distancias entre los centros de salud
     for i in range(n):
         for j in range(i + 1, n):
             dist = calcular_distancia(
@@ -38,30 +37,26 @@ def kruskal_mst(centros_salud, map_widget=None):
             )
             edges.append((dist, i, j))
 
-    # Ordenar las aristas por distancia
     edges.sort()
     
-    # Aplicar el algoritmo de Kruskal
     uf = UnionFind(n)
     mst_edges = []
+    total_distancia = 0
     for dist, u, v in edges:
         if uf.find(u) != uf.find(v):
             uf.union(u, v)
             mst_edges.append((u, v, dist))
+            total_distancia += dist
+            print(total_distancia)
             if len(mst_edges) == n - 1:
                 break
     
-    # Debuggeo en consola de las conexiones del MST
-    print("Conexiones del MST (debug):")
-    for u, v, dist in mst_edges:
-        print(f"{centros_salud[u]['nombre']} -- {centros_salud[v]['nombre']} : {dist:.2f} unidades de distancia")
-
-    # Mostrar el MST en el mapa, si el map_widget está presente
     if map_widget:
         map_widget.delete_all_marker()
         for u, v, dist in mst_edges:
             lat1, lon1 = centros_salud[u]['lat'], centros_salud[u]['lon']
             lat2, lon2 = centros_salud[v]['lat'], centros_salud[v]['lon']
             map_widget.set_path([(lat1, lon1), (lat2, lon2)])
+    
+    return mst_edges, total_distancia
 
-    return mst_edges

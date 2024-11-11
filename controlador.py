@@ -69,15 +69,18 @@ class Controlador:
         ruta, distancia = dijkstra(self.grafo, inicio, fin)
         distancia *= 10
 
-        self.label_result.configure(text=f"Ruta: {ruta}\nDistancia: {distancia:.2f} unidades")
+        return ruta, distancia
 
     def aplicar_kruskal(self): #aplicar el algoritmo de kruskal
         subset_centros = random.sample(self.centros_salud, 500) if len(self.centros_salud) > 500 else self.centros_salud
-        kruskal_mst(subset_centros, self.map_widget)
+        mst_edges, total_distancia = kruskal_mst(subset_centros, self.map_widget)
+        
+        print("Aristas del MST (Conexiones):")
+        for u, v, dist in mst_edges:
+            print(f"{self.centros_salud[u]['nombre']} --> {self.centros_salud[v]['nombre']} : {dist:.2f} unidades de distancia")
 
-        self.label_result.configure(
-            text="Árbol de expansión mínima generado y mostrado en el mapa."
-        )
+        print(f"Total de distancia: {total_distancia}")
+        return mst_edges, total_distancia
 
     def cargar_centros_salud(self): #leer el .csv
         centros_salud = []
