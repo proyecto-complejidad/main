@@ -1,6 +1,4 @@
 import math
-import heapq
-from tkintermapview import TkinterMapView
 
 def calcular_distancia(lat1, lon1, lat2, lon2):
     return math.sqrt((lat2 - lat1) ** 2 + (lon2 - lon1) ** 2)
@@ -27,10 +25,11 @@ class UnionFind:
                 self.parent[root_v] = root_u
                 self.rank[root_u] += 1
 
-def kruskal_mst(centros_salud, map_widget):
+def kruskal_mst(centros_salud, map_widget=None):
     edges = []
     n = len(centros_salud)
     
+    # Crear todas las aristas con distancias entre los centros de salud
     for i in range(n):
         for j in range(i + 1, n):
             dist = calcular_distancia(
@@ -52,11 +51,17 @@ def kruskal_mst(centros_salud, map_widget):
             if len(mst_edges) == n - 1:
                 break
     
-    # Mostrar el MST en el mapa
-    map_widget.delete_all_marker()
+    # Debuggeo en consola de las conexiones del MST
+    print("Conexiones del MST (debug):")
     for u, v, dist in mst_edges:
-        lat1, lon1 = centros_salud[u]['lat'], centros_salud[u]['lon']
-        lat2, lon2 = centros_salud[v]['lat'], centros_salud[v]['lon']
-        map_widget.set_path([(lat1, lon1), (lat2, lon2)])
+        print(f"{centros_salud[u]['nombre']} -- {centros_salud[v]['nombre']} : {dist:.2f} unidades de distancia")
+
+    # Mostrar el MST en el mapa, si el map_widget está presente
+    if map_widget:
+        map_widget.delete_all_marker()
+        for u, v, dist in mst_edges:
+            lat1, lon1 = centros_salud[u]['lat'], centros_salud[u]['lon']
+            lat2, lon2 = centros_salud[v]['lat'], centros_salud[v]['lon']
+            map_widget.set_path([(lat1, lon1), (lat2, lon2)])
 
     return mst_edges

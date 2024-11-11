@@ -1,13 +1,12 @@
 import customtkinter as ctk
 from tkintermapview import TkinterMapView
 import csv
+import random
 from dijkstra import dijkstra, construir_grafo
-from kruskal import kruskal_mst  # Importa la función de Kruskal
+from kruskal import kruskal_mst
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
-
-import csv
 
 def cargar_centros_salud():
     centros_salud = []
@@ -16,14 +15,13 @@ def cargar_centros_salud():
         print("Encabezados encontrados:", reader.fieldnames)
         for row in reader:
             try:
-                # Reemplaza comas por puntos y elimina puntos adicionales
                 lat_str = row["x_gis"].replace(',', '.').replace('.', '', row["x_gis"].count('.') - 1)
                 lon_str = row["y_gis"].replace(',', '.').replace('.', '', row["y_gis"].count('.') - 1)
                 
                 lat = float(lat_str)
                 lon = float(lon_str)
 
-                if -90 <= lat <= 90 and -180 <= lon <= 180:  # Verifica que las coordenadas sean válidas
+                if -90 <= lat <= 90 and -180 <= lon <= 180:
                     centros_salud.append({
                         "nombre": row["Nombre"].strip(),
                         "lat": lat,
@@ -39,12 +37,14 @@ def buscar_ruta_mas_corta():
     inicio = entry_start.get()
     fin = entry_end.get()
     ruta, distancia = dijkstra(grafo, inicio, fin)
-    distancia = distancia*100
+    distancia = distancia * 10  # Convertir a kilómetros
     label_result.configure(text=f"Ruta más corta: {' -> '.join(ruta)}\nDistancia total: {distancia:.2f} kilómetros")
 
 def mostrar_mst():
-    kruskal_mst(centros_salud, map_widget)
-    label_result.configure(text="Árbol de expansión mínima generado y mostrado en el mapa")
+    # Seleccionar 50 datos aleatorios de los centros de salud
+    subset_centros = random.sample(centros_salud, 150) if len(centros_salud) > 50 else centros_salud
+    kruskal_mst(subset_centros, map_widget)  # Mostrar MST en el mapa y debuggeo en consola
+    label_result.configure(text="Árbol de expansión mínima generado y mostrado en el mapa con 50 centros de salud.")
 
 root = ctk.CTk()
 root.geometry("800x600")
