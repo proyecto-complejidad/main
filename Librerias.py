@@ -3,8 +3,9 @@ import tkinter
 from PIL import Image, ImageTk
 import customtkinter
 import tkintermapview
+from pyproj import Proj, transform
 import math
 import heapq
 import csv
 import networkx as nx
-from geopy.distance import geodesic
+import matplotlib.pyplot as plt
